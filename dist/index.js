@@ -32,21 +32,32 @@ var _isIpfs = require('is-ipfs');
 
 var _isIpfs2 = _interopRequireDefault(_isIpfs);
 
+var _buffer = require('buffer');
+
 var _ejson = require('ejson');
 
 var _ejson2 = _interopRequireDefault(_ejson);
 
-var _buffer = require('buffer');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+//Most of this is taken from https://github.com/AkashaProject/meteor-ipfs/blob/master/lib/ipfsServerMethods.js
+//but rewritten to use promises rather than fibers and to let us extend it.
+//
+//NB the license for the above code was the MPL, so we probably have to make just this file available.
+//Why not just fork the module? I'm not a fan of the overhead that the module has for downloading IPFS
+//itself and installing it. We also want this code available on both the server and locally (for the local IPFS
+//node option)
+//
+//It is likely that writing our own module is the easiest way to meet the MPL though, but for now, it's going
+//to be here.
+
+/* eslint-env node */
+
 var IpfsClient = function () {
-  function IpfsClient(opts) {
+  function IpfsClient() {
     (0, _classCallCheck3.default)(this, IpfsClient);
 
-    opts = opts || {};
-    this._address = opts.address || '/ip4/127.0.0.1/tcp/5001';
-    this._ipfs = (0, _ipfsApi2.default)(this._address);
+    this._ipfsApi = (0, _ipfsApi2.default)('/ip4/127.0.0.1/tcp/5001');
   }
 
   (0, _createClass3.default)(IpfsClient, [{
@@ -56,18 +67,18 @@ var IpfsClient = function () {
 
       return new _promise2.default(function (resolve, reject) {
         var currentChunk = new _buffer.Buffer(0);
-        _this._ipfs.cat(hash, function (err, data) {
+        _this._ipfsApi.cat(hash, function (err, data) {
           if (err) {
             return reject(err);
           }
           if (data && data.readable) {
             data.on('data', function (chunk) {
-              // If we execute on the server, chunk is a buffer
-              // If we execute on the client, chunk is a string
-              // We can't Buffer.concat strings
-              // A cookie for anyone who can work out what's happening here
-              // Unfortunately, it might be because of meteor-node-stubs which would be
-              // quite the knot to untangle.
+              //If we execute on the server, chunk is a buffer
+              //If we execute on the client, chunk is a string
+              //We can't Buffer.concat strings
+              //A cookie for anyone who can work out what's happening here
+              //Unfortunately, it might be because of meteor-node-stubs which would be
+              //quite the knot to untangle.
               if (typeof chunk === 'string') {
                 chunk = new _buffer.Buffer(chunk);
               }
@@ -94,7 +105,7 @@ var IpfsClient = function () {
         content = new _buffer.Buffer(content);
       }
       return new _promise2.default(function (resolve, reject) {
-        _this2._ipfs.add(content, function (err, data) {
+        _this2._ipfsApi.add(content, function (err, data) {
           if (err) {
             reject(err);
           } else {
@@ -109,8 +120,8 @@ var IpfsClient = function () {
       var _this3 = this;
 
       this._ipnsTarget = '/ipfs/' + hash;
-      return new _promise2.default(function (resolve, reject) {
-        _this3._ipfs.name.publish(hash, function (err, data) {
+      new _promise2.default(function (resolve, reject) {
+        _this3._ipfsApi.name.publish(hash, function (err, data) {
           if (err) {
             reject(new Error(err.Message));
           } else {
@@ -125,7 +136,7 @@ var IpfsClient = function () {
       var _this4 = this;
 
       return new _promise2.default(function (resolve, reject) {
-        _this4._ipfs.object.patch.addLink(root, name, ref, function (err, data) {
+        _this4._ipfsApi.object.patch.addLink(root, name, ref, function (err, data) {
           if (err) {
             reject(new Error(err.Message));
           } else {
@@ -140,7 +151,7 @@ var IpfsClient = function () {
       var _this5 = this;
 
       return new _promise2.default(function (resolve, reject) {
-        _this5._ipfs.object.patch.rmLink(root, link, function (err, data) {
+        _this5._ipfsApi.object.patch.rmLink(root, link, function (err, data) {
           if (err) {
             reject(new Error(err.Message));
           } else {
@@ -170,11 +181,12 @@ var IpfsClient = function () {
                   if (this._ipnsTarget) {
                     path = path.replace('/ipns/' + ipfsid, this._ipnsTarget);
                   } else {
+                    console.log('nocache! but we need one!');
                     this.ipfsNameResolve('/ipns/' + ipfsid);
                   }
                 }
                 return _context.abrupt('return', new _promise2.default(function (resolve, reject) {
-                  _this6._ipfs.ls(path, function (err, data) {
+                  _this6._ipfsApi.ls(path, function (err, data) {
                     if (err) {
                       reject(new Error(err.Message));
                     } else {
@@ -231,7 +243,7 @@ var IpfsClient = function () {
 
               case 6:
                 return _context2.abrupt('return', new _promise2.default(function (resolve, reject) {
-                  _this7._ipfs.name.resolve(name, function (err, data) {
+                  _this7._ipfsApi.name.resolve(name, function (err, data) {
                     if (err) {
                       reject(new Error(err.Message));
                     } else {
@@ -263,7 +275,7 @@ var IpfsClient = function () {
       var _this8 = this;
 
       return new _promise2.default(function (resolve, reject) {
-        _this8._ipfs.id(function (err, data) {
+        _this8._ipfsApi.id(function (err, data) {
           if (err) {
             reject(new Error(err.Message));
           } else {
@@ -296,11 +308,11 @@ var IpfsClient = function () {
                 throw new Error('Not an ipfs path');
 
               case 2:
-                // strip off the last slash if it exists
+                //strip off the last slash if it exists
                 if (path.slice(-1) === '/') {
                   path = path.slice(0, path.length - 1);
                 }
-                // If the path is /ipns/, then resolve it
+                //If the path is /ipns/, then resolve it
 
                 if (!(path.slice(0, 6) === '/ipns/')) {
                   _context3.next = 8;
@@ -330,7 +342,7 @@ var IpfsClient = function () {
               case 14:
                 res = _context3.sent;
                 return _context3.abrupt('return', res.Objects[0].Links.filter(function (element) {
-                  return !!(element.Name === path.slice(path.lastIndexOf('/') + 1));
+                  return element.Name === path.slice(path.lastIndexOf('/') + 1);
                 })[0].Hash);
 
               case 16:
@@ -351,4 +363,13 @@ var IpfsClient = function () {
   return IpfsClient;
 }();
 
-exports.default = IpfsClient;
+// This is bad. It somehow has to be a singleton which is shared between all files.
+// It would be great to be able to spawn multiple clients (with maybe different addresses);
+
+//This is used to add the EJSON object if Meteor isn't in use
+//They're exactly the same. Working out how to remove this line
+//(which is only really here because of the tests for the IPFS
+//commenting stuff) should be a TODO.
+
+
+exports.default = new IpfsClient();
