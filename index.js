@@ -28,7 +28,7 @@ class IpfsClient {
     //and process.env doesn't exist clientside, so only look for environment
     //variables if we're serverside. Will need to be fed parameters as part of
     //this constructor on the clientside, I imagine.
-    if (Meteor.isServer){
+    if (process){
       if (process.env.IPFS_ADDRESS){
         ipfsAddress = process.env.IPFS_ADDRESS;
       }
