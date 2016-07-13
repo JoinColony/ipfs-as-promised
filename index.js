@@ -22,7 +22,22 @@ import EJSON from 'ejson';
 
 class IpfsClient {
   constructor () {
-    this._ipfsApi = ipfsApi('/ip4/127.0.0.1/tcp/5001');
+    let ipfsAddress = '127.0.0.1';
+    let ipfsPort = '5001';
+    //We will eventually let users use their own IPFS node via this code,
+    //and process.env doesn't exist clientside, so only look for environment
+    //variables if we're serverside. Will need to be fed parameters as part of
+    //this constructor on the clientside, I imagine.
+    if (Meteor.isServer){
+      if (process.env.IPFS_ADDRESS){
+        ipfsAddress = process.env.IPFS_ADDRESS;
+      }
+      if (process.env.IPFS_PORT){
+        ipfsPort = process.env.IPFS_PORT;
+      }
+    }
+    const _IPFS_ADDRESS_ = '/ip4/' + ipfsAddress + '/tcp/' + ipfsPort;
+    this._ipfsApi = ipfsApi(_IPFS_ADDRESS_);
   }
   ipfsCat (hash) {
     return new Promise((resolve, reject) => {

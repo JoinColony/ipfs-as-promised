@@ -57,7 +57,22 @@ var IpfsClient = function () {
   function IpfsClient() {
     (0, _classCallCheck3.default)(this, IpfsClient);
 
-    this._ipfsApi = (0, _ipfsApi2.default)('/ip4/127.0.0.1/tcp/5001');
+    var ipfsAddress = '127.0.0.1';
+    var ipfsPort = '5001';
+    //We will eventually let users use their own IPFS node via this code,
+    //and process.env doesn't exist clientside, so only look for environment
+    //variables if we're serverside. Will need to be fed parameters as part of
+    //this constructor on the clientside, I imagine.
+    if (Meteor.isServer) {
+      if (process.env.IPFS_ADDRESS) {
+        ipfsAddress = process.env.IPFS_ADDRESS;
+      }
+      if (process.env.IPFS_PORT) {
+        ipfsPort = process.env.IPFS_PORT;
+      }
+    }
+    var _IPFS_ADDRESS_ = '/ip4/' + ipfsAddress + '/tcp/' + ipfsPort;
+    this._ipfsApi = (0, _ipfsApi2.default)(_IPFS_ADDRESS_);
   }
 
   (0, _createClass3.default)(IpfsClient, [{
