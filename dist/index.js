@@ -57,7 +57,7 @@ var IpfsClient = function () {
   function IpfsClient() {
     (0, _classCallCheck3.default)(this, IpfsClient);
 
-    var ipfsAddress = '127.0.0.1';
+    var ipfsAddress = 'localhost';
     var ipfsPort = '5001';
     //We will eventually let users use their own IPFS node via this code,
     //and process.env doesn't exist clientside, so only look for environment
@@ -71,8 +71,7 @@ var IpfsClient = function () {
         ipfsPort = process.env.IPFS_PORT;
       }
     }
-    var _IPFS_ADDRESS_ = '/ip4/' + ipfsAddress + '/tcp/' + ipfsPort;
-    this._ipfsApi = (0, _ipfsApi2.default)(_IPFS_ADDRESS_);
+    this._ipfsApi = (0, _ipfsApi2.default)(ipfsAddress, ipfsPort);
   }
 
   (0, _createClass3.default)(IpfsClient, [{

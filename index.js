@@ -22,7 +22,7 @@ import EJSON from 'ejson';
 
 class IpfsClient {
   constructor () {
-    let ipfsAddress = '127.0.0.1';
+    let ipfsAddress = 'localhost';
     let ipfsPort = '5001';
     //We will eventually let users use their own IPFS node via this code,
     //and process.env doesn't exist clientside, so only look for environment
@@ -36,8 +36,7 @@ class IpfsClient {
         ipfsPort = process.env.IPFS_PORT;
       }
     }
-    const _IPFS_ADDRESS_ = '/ip4/' + ipfsAddress + '/tcp/' + ipfsPort;
-    this._ipfsApi = ipfsApi(_IPFS_ADDRESS_);
+    this._ipfsApi = ipfsApi(ipfsAddress, ipfsPort);
   }
   ipfsCat (hash) {
     return new Promise((resolve, reject) => {
