@@ -10,7 +10,6 @@
   "author": "",
   "license": "MPL-2.0",
   "dependencies": {
-    "buffer": "^4.7.0",
     "ejson": "^2.1.2",
     "ipfs-api": "git+https://github.com/area/js-ipfs-api.git#noES6",
     "is-ipfs": "^0.2.0"
