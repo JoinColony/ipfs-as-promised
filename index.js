@@ -1,6 +1,16 @@
 /* eslint-env node */
-import ipfsApi from 'ipfs-api';
-import isIPFS from 'is-ipfs';
+
+let ipfsApi;
+let isIPFS;
+
+if (process.browser) {
+  ipfsApi = require('ipfs-api/dist');
+  isIPFS = require('is-ipfs/dist');
+} else {
+  ipfsApi = require('ipfs-api');
+  isIPFS = require('is-ipfs');
+}
+
 import { Buffer } from 'buffer';
 //This is used to add the EJSON object if Meteor isn't in use
 //They're exactly the same. Working out how to remove this line

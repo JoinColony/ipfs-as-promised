@@ -24,14 +24,6 @@ var _createClass2 = require('babel-runtime/helpers/createClass');
 
 var _createClass3 = _interopRequireDefault(_createClass2);
 
-var _ipfsApi = require('ipfs-api');
-
-var _ipfsApi2 = _interopRequireDefault(_ipfsApi);
-
-var _isIpfs = require('is-ipfs');
-
-var _isIpfs2 = _interopRequireDefault(_isIpfs);
-
 var _buffer = require('buffer');
 
 var _ejson = require('ejson');
@@ -39,6 +31,24 @@ var _ejson = require('ejson');
 var _ejson2 = _interopRequireDefault(_ejson);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* eslint-env node */
+
+var ipfsApi = void 0;
+var isIPFS = void 0;
+
+if (process.browser) {
+  ipfsApi = require('ipfs-api/dist');
+  isIPFS = require('is-ipfs/dist');
+} else {
+  ipfsApi = require('ipfs-api');
+  isIPFS = require('is-ipfs');
+}
+//This is used to add the EJSON object if Meteor isn't in use
+//They're exactly the same. Working out how to remove this line
+//(which is only really here because of the tests for the IPFS
+//commenting stuff) should be a TODO.
+
 
 //Most of this is taken from https://github.com/AkashaProject/meteor-ipfs/blob/master/lib/ipfsServerMethods.js
 //but rewritten to use promises rather than fibers and to let us extend it.
@@ -50,8 +60,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //It is likely that writing our own module is the easiest way to meet the MPL though, but for now, it's going
 //to be here.
-
-/* eslint-env node */
 
 var IpfsClient = function () {
   function IpfsClient() {
@@ -71,7 +79,7 @@ var IpfsClient = function () {
         ipfsPort = process.env.IPFS_PORT;
       }
     }
-    this._ipfsApi = (0, _ipfsApi2.default)(ipfsAddress, ipfsPort);
+    this._ipfsApi = ipfsApi(ipfsAddress, ipfsPort);
   }
 
   (0, _createClass3.default)(IpfsClient, [{
@@ -314,7 +322,7 @@ var IpfsClient = function () {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                if (_isIpfs2.default.path(path)) {
+                if (isIPFS.path(path)) {
                   _context3.next = 2;
                   break;
                 }
@@ -379,11 +387,6 @@ var IpfsClient = function () {
 
 // This is bad. It somehow has to be a singleton which is shared between all files.
 // It would be great to be able to spawn multiple clients (with maybe different addresses);
-
-//This is used to add the EJSON object if Meteor isn't in use
-//They're exactly the same. Working out how to remove this line
-//(which is only really here because of the tests for the IPFS
-//commenting stuff) should be a TODO.
 
 
 exports.default = new IpfsClient();
